@@ -21,12 +21,12 @@ class NotebooksResponse(BaseModel):
     products: List[Product]
 
 @app.get("/notebooks", response_model=NotebooksResponse)
-def get_notebooks(brand: Optional[str] = Query(None, description="Filtro de marca do notebook")):
+async def get_notebooks(brand: Optional[str] = Query(None, description="Filtro de marca do notebook")):
     """
     Endpoint que retorna a lista de notebooks ordenados do mais barato para o mais caro.
     Se nenhuma marca for especificada, retorna notebooks Lenovo por padrão.
     """
-    products, total_count = get_lenovo_products_sorted(brand)
+    products, total_count = await get_lenovo_products_sorted(brand)
     if not products:
         raise HTTPException(status_code=404, detail="Nenhum produto encontrado.")
     return {

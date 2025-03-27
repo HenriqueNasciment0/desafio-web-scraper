@@ -1,15 +1,16 @@
-import requests
+import asyncio
+import httpx
 from bs4 import BeautifulSoup
 
 BASE_URL = "https://webscraper.io/test-sites/e-commerce/static/computers/laptops?page="
 
-def fetch_html(url):
+async def fetch_html(client, url):
 
     try:
-        response = requests.get(url)
+        response = await client.get(url)
         response.raise_for_status() 
         return response.text
-    except requests.RequestException as e:
+    except httpx.RequestException as e:
         print(f"Erro ao acessar a URL: {e}")
         return None
 
@@ -31,7 +32,6 @@ def parse_products(html, brand_filter=None):
 
     soup = BeautifulSoup(html, 'html.parser')
     products = []
-    page_count = 0
     
     product_cards = soup.find_all("div", class_="card thumbnail")
     
@@ -53,7 +53,6 @@ def parse_products(html, brand_filter=None):
             if brand_filter.lower() not in full_title.lower():
                 continue
         
-        page_count += 1
         price_tag = caption.find("h4", class_="price")
         try:
             price = float(price_tag.get_text(strip=True).replace("$", "")) if price_tag else None
@@ -89,36 +88,37 @@ def parse_products(html, brand_filter=None):
         }
         products.append(product)
     
-    return products, page_count
+    return products
 
+async def get_lenovo_products_sorted(brand_filter=None):  
 
-def get_lenovo_products_sorted(brand_filter=None):  
-
-    first_page_html = fetch_html(BASE_URL + "1")
-    if first_page_html is None:
-        return []
+    async with httpx.AsyncClient() as client:
+        first_page_html = await fetch_html(client, BASE_URL + "1")
+        if first_page_html is None:
+            return []
     
-    max_page = get_max_page_number(first_page_html)
-    print(f"Número máximo de páginas encontrado: {max_page}")
-    
-    all_products = []
-    total_count = 0
+        max_page = get_max_page_number(first_page_html)
+        print(f"Número máximo de páginas encontradas: {max_page}")
+        
+        tasks = [fetch_html(client, BASE_URL + str(page)) for page in range(1, max_page + 1)]
+        html_pages = await asyncio.gather(*tasks)
 
-    for page in range(1, max_page + 1):
-        url = BASE_URL + str(page)
-        print(f"Consultando: {url}")
-        html = fetch_html(url)
-        if html is None:
-            continue
-        products, page_count = parse_products(html, brand_filter)
-        all_products.extend(products)
-        total_count += page_count
-    
+        all_products = []
+        total_count = 0
 
-    sorted_products = sorted(all_products, key=lambda x: x["price"] if x["price"] is not None else float('inf'))
-    return sorted_products, total_count
+        for html in html_pages:
+            if html is None:
+                continue
+            products = parse_products(html, brand_filter)
+            all_products.extend(products)
+            total_count += len(products)
+
+        sorted_products = sorted(all_products, key=lambda x: x["price"] if x["price"] is not None else float('inf'))
+        return sorted_products, total_count
+
 
 if __name__ == "__main__":
-    products = get_lenovo_products_sorted()
+    products, total_count = asyncio.run(get_lenovo_products_sorted())
+    print(f"Total de produtos encontrados: {total_count}")
     for p in products:
         print(p)

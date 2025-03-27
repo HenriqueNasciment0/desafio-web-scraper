@@ -1,14 +1,15 @@
-# Web Scraper e API para Notebooks Lenovo
+# Web Scraper e API para Notebooks
 
-Este projeto cria um web scraper para coletar informações de notebooks Lenovo do site https://webscraper.io/test-sites/e-commerce/static/computers/laptops, organizando e disponibilizando os dados por meio de uma API FastAPI.
+Este projeto cria um web scraper para coletar informações de notebooks do site https://webscraper.io/test-sites/e-commerce/static/computers/laptops, organizando e disponibilizando os dados por meio de uma API FastAPI.
 
 ## 🚀 Funcionalidades
 
 - Extrai dados de notebooks do site especificado
-- Filtra e organiza notebooks Lenovo
-- Classifica produtos por preço (do mais barato ao mais caro)
-- Oferece API REST para acesso aos dados
+- Filtra notebooks por marca
+- Organiza notebooks por preço (do mais barato ao mais caro)
+- Oferece API REST flexível para acesso aos dados
 - Implementa tratamento de erros
+- **Novo: Suporte a filtro de marca de notebook**
 
 ## 🛠️ Tecnologias Utilizadas
 
@@ -30,10 +31,8 @@ Este projeto cria um web scraper para coletar informações de notebooks Lenovo 
 ```bash
 # Opção SSH
 git clone git@github.com:HenriqueNasciment0/desafio-web-scraper.git
-
 # Opção HTTPS
 git clone https://github.com/HenriqueNasciment0/desafio-web-scraper.git
-
 # Navegue para o diretório do projeto
 cd desafio-web-scraper
 ```
@@ -43,11 +42,9 @@ cd desafio-web-scraper
 ```bash
 # Crie o ambiente virtual
 python -m venv venv
-
 # Ative o ambiente virtual
 # Linux/MacOS
 source venv/bin/activate
-
 # Windows
 venv\Scripts\activate
 ```
@@ -74,27 +71,50 @@ python scraper.py
 uvicorn api:app --reload
 ```
 
-## 🌐 Endpoint da API
+## 🌐 Endpoints da API
 
-- **Listar Notebooks**: `GET http://127.0.0.1:8000/notebooks`
-  - Retorna lista de notebooks Lenovo
-  - Ordenados por preço
+### Documentação da API
 
-## 🧪 Formas de Testar
+- **Endpoint**: `http://127.0.0.1:8000/docs`
+- **Descrição**: Interface Swagger UI para documentação interativa da API
 
-### Via Navegador
+### Listar Notebooks
 
-- Acesse `http://127.0.0.1:8000/notebooks`
+- **Endpoint**: `GET http://127.0.0.1:8000/notebooks`
+- **Descrição**: Retorna lista de notebooks
+- **Parâmetros**:
+  - `brand` (opcional): Filtro por marca do notebook
+- **Comportamento Padrão**: Retorna notebooks Lenovo ordenados por preço
 
-### Via Terminal
+## 🧪 Exemplos de Uso
+
+### Buscar Notebooks Lenovo (Padrão)
 
 ```bash
-# Usando curl
 curl http://127.0.0.1:8000/notebooks
-
-# Usando Python Requests
-python -c "import requests; print(requests.get('http://127.0.0.1:8000/notebooks').json())"
 ```
+
+### Buscar Notebooks por Marca Específica
+
+```bash
+# Exemplo: Buscar notebooks Dell
+curl "http://127.0.0.1:8000/notebooks?brand=Dell"
+```
+
+### Testando com Python Requests
+
+```bash
+# Busca padrão
+python -c "import requests; print(requests.get('http://127.0.0.1:8000/notebooks').json())"
+# Busca com filtro de marca
+python -c "import requests; print(requests.get('http://127.0.0.1:8000/notebooks?brand=Acer').json())"
+```
+
+## 📝 Observações
+
+- Sem filtro de marca, a API retorna notebooks Lenovo
+- O filtro de marca é case-insensitive
+- Notebooks são sempre ordenados do mais barato para o mais caro
 
 ---
 
