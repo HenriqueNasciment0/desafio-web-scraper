@@ -27,7 +27,7 @@ def get_max_page_number(html):
                     max_page = num
     return max_page
 
-def parse_products(html):
+def parse_products(html, brand_filter=None):
 
     soup = BeautifulSoup(html, 'html.parser')
     products = []
@@ -45,8 +45,12 @@ def parse_products(html):
         
         full_title = title_tag.get("title") or title_tag.get_text(strip=True)
         
-        if "Lenovo" not in full_title:
-            continue
+        if brand_filter is None:
+            if "Lenovo" not in full_title:
+                continue
+        else:
+            if brand_filter.lower() not in full_title.lower():
+                continue
         
         price_tag = caption.find("h4", class_="price")
         try:
@@ -86,7 +90,7 @@ def parse_products(html):
     return products
 
 
-def get_lenovo_products_sorted():
+def get_lenovo_products_sorted(brand_filter=None):  
 
     first_page_html = fetch_html(BASE_URL + "1")
     if first_page_html is None:
@@ -103,7 +107,7 @@ def get_lenovo_products_sorted():
         html = fetch_html(url)
         if html is None:
             continue
-        products = parse_products(html)
+        products = parse_products(html, brand_filter)
         all_products.extend(products)
     
 
