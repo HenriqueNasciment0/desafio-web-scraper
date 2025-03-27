@@ -31,6 +31,7 @@ def parse_products(html, brand_filter=None):
 
     soup = BeautifulSoup(html, 'html.parser')
     products = []
+    page_count = 0
     
     product_cards = soup.find_all("div", class_="card thumbnail")
     
@@ -52,6 +53,7 @@ def parse_products(html, brand_filter=None):
             if brand_filter.lower() not in full_title.lower():
                 continue
         
+        page_count += 1
         price_tag = caption.find("h4", class_="price")
         try:
             price = float(price_tag.get_text(strip=True).replace("$", "")) if price_tag else None
@@ -87,7 +89,7 @@ def parse_products(html, brand_filter=None):
         }
         products.append(product)
     
-    return products
+    return products, page_count
 
 
 def get_lenovo_products_sorted(brand_filter=None):  
@@ -100,6 +102,7 @@ def get_lenovo_products_sorted(brand_filter=None):
     print(f"Número máximo de páginas encontrado: {max_page}")
     
     all_products = []
+    total_count = 0
 
     for page in range(1, max_page + 1):
         url = BASE_URL + str(page)
@@ -107,12 +110,13 @@ def get_lenovo_products_sorted(brand_filter=None):
         html = fetch_html(url)
         if html is None:
             continue
-        products = parse_products(html, brand_filter)
+        products, page_count = parse_products(html, brand_filter)
         all_products.extend(products)
+        total_count += page_count
     
 
     sorted_products = sorted(all_products, key=lambda x: x["price"] if x["price"] is not None else float('inf'))
-    return sorted_products
+    return sorted_products, total_count
 
 if __name__ == "__main__":
     products = get_lenovo_products_sorted()
